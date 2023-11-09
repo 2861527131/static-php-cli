@@ -216,6 +216,7 @@ bin/spc micro:combine my-app.phar -I "memory_limit=4G" -I "disable_functions=sys
 因为 php-fpm 必须指定配置文件才可启动，本项目编译的 php-fpm 不会带任何配置文件，所以需自行编写 `php-fpm.conf` 和 `pool.conf` 配置文件。
 
 指定 `php-fpm.conf` 可以使用命令参数 `-y`，例如：`./php-fpm -y php-fpm.conf`。
+指定 `php.ini` 可以使用命令参数 `-c`，例如：`./php-fpm -c php.ini`。
 
 ### 使用 embed
 
