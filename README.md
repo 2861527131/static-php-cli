@@ -238,7 +238,7 @@ This file will be located in the path `buildroot/bin/`, simply copy it out for u
 In normal Linux distributions and macOS systems, the package manager will automatically generate a default fpm configuration file after installing php-fpm.
 Because php-fpm must specify a configuration file before running, the php-fpm compiled by this project will not have any configuration files, so you need to write `php-fpm.conf` and `pool.conf` configuration files yourself.
 
-Specifying `php-fpm.conf` can use the command parameter `-y`, for example: `./php-fpm -y php-fpm.conf`.
+Specifying `php-fpm.conf` can use the command parameter `-y`, for example: `./php-fpm -y php-fpm.conf`.  
 Specifying `php.ini` can use the command parameter `-c`, for example: `./php-fpm -c php.ini`.
 
 ### Use embed
