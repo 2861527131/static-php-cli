@@ -144,6 +144,15 @@
             "path": "LICENSE"
         }
     },
+    "imap": {
+        "type": "git",
+        "url": "https://github.com/static-php/imap.git",
+        "rev": "master",
+        "license": {
+            "type": "file",
+            "path": "LICENSE"
+        }
+    },
     "inotify": {
         "type": "url",
         "url": "https://pecl.php.net/get/inotify",
@@ -225,7 +234,7 @@
     },
     "libpng": {
         "type": "git",
-        "url": "https://git.code.sf.net/p/libpng/code",
+        "url": "https://github.com/glennrp/libpng.git",
         "rev": "libpng16",
         "license": {
             "type": "file",
