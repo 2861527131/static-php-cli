@@ -6,7 +6,6 @@ namespace SPC\builder\linux;
 
 use SPC\builder\traits\UnixSystemUtilTrait;
 use SPC\exception\RuntimeException;
-use SPC\exception\WrongUsageException;
 
 class SystemUtil
 {
@@ -85,56 +84,6 @@ class SystemUtil
 
     /**
      * @throws RuntimeException
-     * @throws WrongUsageException
-     * @throws WrongUsageException
-     */
-    public static function getArchCFlags(string $cc, string $arch): string
-    {
-        if (php_uname('m') === $arch) {
-            return '';
-        }
-        return match (static::getCCType($cc)) {
-            'clang' => match ($arch) {
-                'x86_64' => '--target=x86_64-unknown-linux',
-                'arm64', 'aarch64' => '--target=arm64-unknown-linux',
-                default => throw new WrongUsageException('unsupported arch: ' . $arch),
-            },
-            'gcc' => '',
-            default => throw new WrongUsageException('cc compiler ' . $cc . ' is not supported'),
-        };
-    }
-
-    /**
-     * @throws RuntimeException
-     */
-    public static function getTuneCFlags(string $arch): array
-    {
-        return match ($arch) {
-            'x86_64' => [
-                '-march=corei7',
-                '-mtune=core-avx2',
-            ],
-            'arm64', 'aarch64' => [],
-            default => throw new RuntimeException('unsupported arch: ' . $arch),
-        };
-    }
-
-    public static function checkCCFlags(array $flags, string $cc): array
-    {
-        return array_filter($flags, fn ($flag) => static::checkCCFlag($flag, $cc));
-    }
-
-    public static function checkCCFlag(string $flag, string $cc): string
-    {
-        [$ret] = shell()->execWithResult("echo | {$cc} -E -x c - {$flag} 2>/dev/null");
-        if ($ret != 0) {
-            return '';
-        }
-        return $flag;
-    }
-
-    /**
-     * @throws RuntimeException
      * @noinspection PhpUnused
      */
     public static function getCrossCompilePrefix(string $cc, string $arch): string
@@ -208,5 +157,24 @@ class SystemUtil
             $ret[] = $path;
         }
         return $ret;
+    }
+
+    /**
+     * Get fully-supported linux distros.
+     *
+     * @return string[] List of supported Linux distro name for doctor
+     */
+    public static function getSupportedDistros(): array
+    {
+        return [
+            // debian-like
+            'debian', 'ubuntu', 'Deepin',
+            // rhel-like
+            'redhat',
+            // alpine
+            'alpine',
+            // arch
+            'arch', 'manjaro',
+        ];
     }
 }

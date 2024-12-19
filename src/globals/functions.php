@@ -3,8 +3,13 @@
 declare(strict_types=1);
 
 use Psr\Log\LoggerInterface;
+use SPC\builder\BuilderBase;
+use SPC\builder\BuilderProvider;
+use SPC\exception\InterruptException;
+use SPC\exception\RuntimeException;
 use SPC\exception\WrongUsageException;
 use SPC\util\UnixShell;
+use SPC\util\WindowsCmd;
 use ZM\Logger\ConsoleLogger;
 
 /**
@@ -27,6 +32,11 @@ function logger(): LoggerInterface
     return $ob_logger;
 }
 
+function is_unix(): bool
+{
+    return in_array(PHP_OS_FAMILY, ['Linux', 'Darwin', 'BSD']);
+}
+
 /**
  * Transfer architecture name to gnu triplet
  *
@@ -43,6 +53,26 @@ function arch2gnu(string $arch): string
     };
 }
 
+/**
+ * Match pattern function
+ * Example: match_pattern('*.txt', 'test.txt') will return true.
+ *
+ * @param string $pattern Pattern string
+ * @param string $subject Subject string
+ */
+function match_pattern(string $pattern, string $subject): bool
+{
+    $pattern = str_replace(['\*', '\\\.*'], ['.*', '\*'], preg_quote($pattern, '/'));
+    $pattern = '/^' . $pattern . '$/i';
+    return preg_match($pattern, $subject) === 1;
+}
+
+/**
+ * Quote a string with a quote character
+ *
+ * @param string $str   String to quote
+ * @param string $quote Quote character, default: `"`
+ */
 function quote(string $str, string $quote = '"'): string
 {
     return $quote . $str . $quote;
@@ -50,7 +80,6 @@ function quote(string $str, string $quote = '"'): string
 
 /**
  * Get Family name of current OS
- *
  * @throws WrongUsageException
  */
 function osfamily2dir(): string
@@ -65,10 +94,50 @@ function osfamily2dir(): string
     };
 }
 
+function shell(?bool $debug = null): UnixShell
+{
+    /* @noinspection PhpUnhandledExceptionInspection */
+    return new UnixShell($debug);
+}
+
+function cmd(?bool $debug = null): WindowsCmd
+{
+    /* @noinspection PhpUnhandledExceptionInspection */
+    return new WindowsCmd($debug);
+}
+
+/**
+ * Get current builder.
+ *
+ * @throws WrongUsageException
+ */
+function builder(): BuilderBase
+{
+    return BuilderProvider::getBuilder();
+}
+
+/**
+ * Get current patch point.
+ *
+ * @throws WrongUsageException
+ */
+function patch_point(): string
+{
+    return BuilderProvider::getBuilder()->getPatchPoint();
+}
+
+function patch_point_interrupt(int $retcode, string $msg = ''): InterruptException
+{
+    return new InterruptException(message: $msg, code: $retcode);
+}
+
+// ------- function f_* part -------
+// f_ means standard function wrapper
+
 /**
  * Execute the shell command, and the output will be directly printed in the terminal. If there is an error, an exception will be thrown
  *
- * @throws \SPC\exception\RuntimeException
+ * @throws RuntimeException
  */
 function f_passthru(string $cmd): ?bool
 {
@@ -82,11 +151,11 @@ function f_passthru(string $cmd): ?bool
     if ($danger) {
         logger()->notice('Running dangerous command: ' . $cmd);
     } else {
-        logger()->debug('Running command with direct output: ' . $cmd);
+        logger()->debug('[PASSTHRU] ' . $cmd);
     }
     $ret = passthru($cmd, $code);
     if ($code !== 0) {
-        throw new \SPC\exception\RuntimeException('Command run failed with code[' . $code . ']: ' . $cmd, $code);
+        throw new RuntimeException('Command run failed with code[' . $code . ']: ' . $cmd, $code);
     }
     return $ret;
 }
@@ -114,9 +183,4 @@ function f_putenv(string $env): bool
 {
     logger()->debug('Setting env: ' . $env);
     return putenv($env);
-}
-
-function shell(?bool $debug = null): UnixShell
-{
-    return new UnixShell($debug);
 }
